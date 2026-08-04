@@ -41,14 +41,41 @@ public class RekoltApp {
 //  values the produce delivered and prints the amount made from it
     private static void valueDelivery(String deliveryId, String memberId, String memberName,
                                       double massKg, int qualityScore) {
+
+//      stores the values for the grade scored and quality of the produce
         String grade = gradeOf(qualityScore);
         double gradeMultiplier = gradeMultiplierOf(qualityScore);
         boolean rejected = qualityScore < 50;
 
-        double baseValue;
+//      calculates the base value of the produce
+        double baseValue= massKg * bnsPricePerKg;
 
-        double gradeScore;
+//      calculates new value after a grade has been assigned to the produce
+        double gradeScore= baseValue * gradeMultiplier;
 
-        double categoryScore;
+//      calculates the new value of the produce depending on its category
+        double categoryScore= gradeScore * cerealMultiplier;
+
+//      performing explicit cast on the commission percentage to allow integer division
+        double commissionRate = (double) commissionPercentage / 100;
+
+//      checks if a produce has been rejected before assigning a commission fee
+        double commission;
+        if(rejected){
+             commission = 0;
+        } else{
+            commission= commissionRate * categoryScore;
+        }
+
+//      checks if a produce has been rejected before assigning a Levy fee
+        double levy;
+        if(rejected){
+            levy =0;
+        } else {
+            levy = massKg * levyPerKg;
+        }
+
+//       calculates the net payable amount a farmer will receive
+        double netPayable = categoryScore - commission - levy;
     }
 }
