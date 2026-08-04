@@ -75,7 +75,36 @@ public class RekoltApp {
             levy = massKg * levyPerKg;
         }
 
-//       calculates the net payable amount a farmer will receive
+//      calculates the net payable amount a farmer will receive
         double netPayable = categoryScore - commission - levy;
+
+        // Display. This is the only place any rounding happens.
+        System.out.println("Delivery: " + deliveryId + " recorded. " + memberId + " " + memberName
+                + " Produce: BNS " + kg(massKg) + "kg - score= " + qualityScore + " - grade= " + grade);
+
+//      column and row print formats
+        System.out.printf("  1. %-16s %-28s %14s%n", "Base value",
+                kg(massKg) + " kg x " + money(bnsPricePerKg) + " MUR/kg", money(baseValue));
+        System.out.printf("  2. %-16s %-28s %14s%n", "Grade " + grade,
+                "x " + rate(gradeMultiplier), money(gradeScore));
+        System.out.printf("  3. %-16s %-28s %14s%n", "Cereal",
+                "x " + rate(cerealMultiplier), money(categoryScore));
+        System.out.printf("  4. %-16s %-28s %14s%n", "Commission",
+                commissionPercentage + "% of Produce value after category score", "= " + money(commission));
+        System.out.printf("  5. %-16s %-28s %14s%n", "Transport levy",
+                rejected ? "not charged on Produce REJECT" : kg(massKg) + " kg x " + money(levyPerKg) + " MUR/kg",
+                "= " + money(levy));
+        System.out.printf("     %-16s %-28s %14s MUR%n", "NET PAYABLE", "", money(netPayable));
+    }
+
+    public static void main(String[] args) {
+
+        // The worked example from the specification. Expected net: 22,732.70 MUR.
+        valueDelivery("D-1001", "M-0042", "Devi Ramjaun", 236.0, 91);
+
+        System.out.println();
+
+        // The same load with a quality score below 50. Expected: paid nothing because Produce was rejected
+        valueDelivery("D-1002", "M-0042", "Devi Ramjaun", 236.0, 42);
     }
 }
