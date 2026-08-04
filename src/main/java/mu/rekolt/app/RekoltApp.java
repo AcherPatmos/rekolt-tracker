@@ -2,10 +2,10 @@ package mu.rekolt.app;
 
 // testing my code against the worked example.
 public class RekoltApp {
-    private static final double BnsPricePerKg  = 90.0;  // BNS Beans, MUR per kg
-    private static final double CerealMultiplier = 1.00;  // beans sit in the cereal category
-    private static final int    CommissionPercentage = 5;    // percentage kept by the cooperative
-    private static final double LevyPerKg       = 2.0;   // transport levy, MUR per kg
+    private static final double bnsPricePerKg  = 90.0;  // BNS Beans, MUR per kg
+    private static final double cerealMultiplier = 1.00;  // beans sit in the cereal category
+    private static final int    commissionPercentage = 5;    // percentage kept by the cooperative
+    private static final double levyPerKg       = 2.0;   // transport levy, MUR per kg
 
 
 //  Grade letter for a quality score.
@@ -23,6 +23,20 @@ public class RekoltApp {
         if (qualityScore >= 50) return 0.85;
         return 0.00;
     }
+//    Money for display: two decimals kept
+    private static String money(double amount) {
+        return String.format("%,.2f", amount);
+    }
+
+//  A mass for display: one decimal kept
+    private static String kg(double massKg) {
+        return String.format("%.1f", massKg);
+    }
+
+//  A multiplier for display: two decimals kept
+    private static String rate(double multiplier) {
+        return String.format("%.2f", multiplier);
+    }
 
 //  values the produce delivered and prints the amount made from it
     private static void valueDelivery(String deliveryId, String memberId, String memberName,
@@ -30,5 +44,11 @@ public class RekoltApp {
         String grade = gradeOf(qualityScore);
         double gradeMultiplier = gradeMultiplierOf(qualityScore);
         boolean rejected = qualityScore < 50;
+
+        double baseValue;
+
+        double gradeScore;
+
+        double categoryScore;
     }
 }
