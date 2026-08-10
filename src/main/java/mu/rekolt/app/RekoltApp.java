@@ -23,4 +23,40 @@ public class RekoltApp {
 //  transport levy in MUR for every kilogram delivered.
     private static final double levyPerKg = 2.0;
 
+    private static final int      weeksInSeason = 20;
+    private static final String[] produceCodes  = { "MZE", "BNS", "POT", "TEA" };
+
+//     Validation bounds, named so the numbers are not scattered through the file.
+    private static final double minMassKg = 0.0;
+    private static final double maxMassKg = 5000.0;
+    private static final int    minScore  = 0;
+    private static final int    maxScore  = 100;
+
+//     The seeded deliveries occupy D-1001 to D-1012, so anything the user
+//     records during this run starts at D-1013.
+    private static int nextDeliveryNumber = 1013;
+
+//   if statement to check for the produce quality score
+    private static String gradeOF(int qualityScore){
+        if(qualityScore>=85){
+            return "A";
+        } else if (qualityScore>=70) {
+            return "B";
+        } else if (qualityScore>=50) {
+            return "C";
+        }
+        return "Reject";
+    }
+
+//   Switch case for assigning grade value to the produce
+    private static double gradeMultiplierOf(String grade) {
+        double gradeMultiplier;
+        gradeMultiplier = switch (grade) {
+            case "A" -> 1.15;
+            case "B" -> 1.00;
+            case "C" -> 0.85;
+            default -> 0.00;  // REJECT
+        };
+        return gradeMultiplier;
+    }
 }
