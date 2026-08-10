@@ -59,4 +59,35 @@ public class RekoltApp {
         };
         return gradeMultiplier;
     }
+
+//  Base price in MUR per kg for a produce code
+    private static double basePriceOf(String produceCode) {
+        return switch (produceCode) {
+            case "MZE" -> mzePricePerKg;
+            case "BNS" -> bnsPricePerKg;
+            case "POT" -> potPricePerKg;
+            case "TEA" -> teaPricePerKg;
+            default -> 0.0;
+        };
+    }
+//  Category multiplier for a produce code.
+    private static double categoryMultiplierOf(String produceCode) {
+        return switch (produceCode) {
+            // MZE and BNS are in the same category
+            case "MZE", "BNS" -> cerealMultiplier;
+            case "POT" -> perishableMultiplier;
+            case "TEA" -> cashCropMultiplier;
+            default -> 0.0;
+        };
+    }
+
+//  produce category identifier
+    private static String categoryNameOf (String produceCode){
+        return switch (produceCode){
+            case "MZE", "BNS" -> "Cereal";
+            case "POT" -> "Perishable";
+            case "TEA" -> "Cash crop";
+            default -> "Unknown";
+        };
+    }
 }
