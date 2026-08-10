@@ -90,4 +90,27 @@ public class RekoltApp {
             default -> "Unknown";
         };
     }
+
+    private static double netPayable(double massKg, double basePrice,
+                                     double gradeMultiplier, double categoryMultiplier) {
+
+        double baseValue     = massKg * basePrice;                  // step 1
+        double gradedValue   = baseValue * gradeMultiplier;         // step 2
+        double categoryValue = gradedValue * categoryMultiplier;    // step 3
+
+//      The cast is required.
+        double commissionRate = (double) commissionPercentage / 100;
+        double commission = categoryValue * commissionRate;         // step 4
+//      checks if a produce was rejected before applying levy fee
+        double levy = (gradeMultiplier > 0.0) ? massKg * levyPerKg : 0.0;   // step 5
+
+        return categoryValue - commission - levy;
+    }
+//  Method overload
+
+    private static double netPayable(Delivery delivery){
+        String grade = gradeOF(delivery.getQualityScore());
+        return netPayable(delivery.getMassKg(), basePriceOf(delivery.getProduceCode()),
+                gradeMultiplierOf(grade), categoryMultiplierOf(delivery.getProduceCode()));
+    }
 }
