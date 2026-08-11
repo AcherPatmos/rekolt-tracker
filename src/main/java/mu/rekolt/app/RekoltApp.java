@@ -128,4 +128,76 @@ public class RekoltApp {
     private static String rate(double multiplier) {
         return String.format("%.2f", multiplier);
     }
+
+//  Menu option: a whole number from 1 to 4
+    private static int readMenuOption(Scanner in) {
+        while (true) {
+            System.out.print("Choose an option: ");
+            String raw = in.nextLine().trim();
+            try {
+                int option = Integer.parseInt(raw);
+                if (option >= 1 && option <= 4) {
+                    return option;
+                }
+                System.out.println("Please choose 1, 2, 3 or 4. Please try again.");
+            } catch (NumberFormatException e) {
+                // Catches both empty input and text, since neither parses.
+                System.out.println("The option must be a whole number from 1 to 4. Please try again.");
+            }
+        }
+    }
+//  Pattern identifier: the letter M, a hyphen, then exactly four digits
+    private static String readMemberId(Scanner in) {
+        while (true) {
+            System.out.print("Member identifier : ");
+            String raw = in.nextLine().trim();
+            if (raw.matches("M-\\d{4}")) {
+                return raw;
+            }
+            System.out.println("The identifier must be M, a hyphen and four digits, for example M-0042. Please try again.");
+        }
+    }
+//  Member name: any non-empty text
+    private static String readName(Scanner in) {
+        while (true) {
+            System.out.print("Member name : ");
+            String raw = in.nextLine().trim();
+            if (!raw.isEmpty()) {
+                return raw;
+            }
+            System.out.println("The name cannot be empty or only spaces. Please try again.");
+        }
+    }
+
+//    Produce code: MZE, BNS, POT or TEA, typed in either case
+    private static String readProduceCode(Scanner in) {
+        while (true) {
+            System.out.print("Produce code (MZE/BNS/POT/TEA) : ");
+            String raw = in.nextLine().trim().toUpperCase();
+            for (String code : produceCodes) {
+                if (code.equals(raw)) {
+                    return raw;
+                }
+            }
+            System.out.println("The produce code must be MZE, BNS, POT or TEA. Please try again.");
+        }
+    }
+//  Mass input : a decimal number above 0 and not more than 5000
+    private static double readMass(Scanner in) {
+        while (true) {
+            System.out.print("Mass in kg : ");
+            String raw = in.nextLine().trim();
+            try {
+                double massKg = Double.parseDouble(raw);
+                // Strictly above the minimum, but the maximum is inclusive:
+                // 5000 is accepted, 5000.01 is not, and 0 is not.
+                if (massKg > minMassKg && massKg <= maxMassKg) {
+                    return massKg;
+                }
+                System.out.println("Mass must be above 0 and not more than 5000. Please try again.");
+            } catch (NumberFormatException e) {
+                System.out.println("Mass must be a number. Please try again.");
+            }
+        }
+    }
 }
