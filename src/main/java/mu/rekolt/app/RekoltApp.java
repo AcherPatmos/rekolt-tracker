@@ -113,4 +113,19 @@ public class RekoltApp {
         return netPayable(delivery.getMassKg(), basePriceOf(delivery.getProduceCode()),
                 gradeMultiplierOf(grade), categoryMultiplierOf(delivery.getProduceCode()));
     }
+
+//  Money for display: thousands separated, two decimals
+    private static String money(double amount) {
+        return String.format("%,.2f", amount);
+    }
+
+//  A mass for display: one decimal
+    private static String kg(double massKg) {
+        return String.format("%.1f", massKg);
+    }
+
+//  A multiplier for display: two decimals
+    private static String rate(double multiplier) {
+        return String.format("%.2f", multiplier);
+    }
 }
