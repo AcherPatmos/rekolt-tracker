@@ -200,4 +200,115 @@ public class RekoltApp {
             }
         }
     }
+//  Quality score: a whole number from 0 to 100.
+    private static int readScore(Scanner in) {
+        while (true) {
+            System.out.print("Quality score (0-100) : ");
+            String raw = in.nextLine().trim();
+            try {
+                int score = Integer.parseInt(raw);
+                if (score >= minScore && score <= maxScore) {
+                    return score;
+                }
+                System.out.println("The score must be from 0 to 100. Please try again.");
+            } catch (NumberFormatException e) {
+                System.out.println("The score must be a whole number. Please try again.");
+            }
+        }
+    }
+
+//  Week of delivery: a whole number from 1 to 20
+    private static int readWeek(Scanner in) {
+        while (true) {
+            System.out.print("Week of delivery (1-20) : ");
+            String raw = in.nextLine().trim();
+            try {
+                int week = Integer.parseInt(raw);
+                if (week >= 1 && week <= weeksInSeason) {
+                    return week;
+                }
+                System.out.println("The week must be from 1 to 20. Please try again.");
+            } catch (NumberFormatException e) {
+                System.out.println("The week must be a whole number. Please try again.");
+            }
+        }
+    }
+//  Runs the six prompts in order and assembles the result into a Delivery
+    private static Delivery readDelivery(Scanner in) {
+        String memberId    = readMemberId(in);
+        String memberName  = readName(in);
+        String produceCode = readProduceCode(in);
+        double massKg      = readMass(in);
+        int    qualityScore = readScore(in);
+        int    week        = readWeek(in);
+
+        String deliveryId = "D-" + nextDeliveryNumber;
+        nextDeliveryNumber++;
+
+        return new Delivery(deliveryId, memberId, memberName,
+                produceCode, massKg, qualityScore, week);
+    }
+//  list holding the full season's produce. had to be an Arraylist so that it can dynamically grow.
+    private static List<Delivery> seedSeason() {
+        List<Delivery> season = new ArrayList<>();
+
+        //                            id             member                name                          code              mass           score         week
+        season.add(new Delivery("D-1001", "M-0042", "Devi Ramjaun",    "BNS", 236.0, 91, 1));
+        season.add(new Delivery("D-1002", "M-0117", "Jean Ah-Kine",    "MZE", 412.5, 78, 1));
+        season.add(new Delivery("D-1003", "M-0088", "Anisha Beeharry", "POT", 150.0, 60, 2));
+        season.add(new Delivery("D-1004", "M-0042", "Devi Ramjaun",    "TEA",  88.3, 91, 1));
+        season.add(new Delivery("D-1005", "M-0117", "Jean Ah-Kine",    "POT", 200.0, 42, 3));  // REJECT
+        season.add(new Delivery("D-1006", "M-0203", "Kavi Soobrayen",  "MZE", 180.0, 66, 2));
+        season.add(new Delivery("D-1007", "M-0311", "Marie Lafleur",   "BNS", 390.5, 76, 2));
+        season.add(new Delivery("D-1008", "M-0203", "Kavi Soobrayen",  "TEA", 120.0, 85, 3));  // boundary: A
+        season.add(new Delivery("D-1009", "M-0311", "Marie Lafleur",   "MZE", 260.0, 70, 3));  // boundary: B
+        season.add(new Delivery("D-1010", "M-0256", "Rajesh Gopaul",   "POT", 320.0, 50, 4));  // boundary: C
+        season.add(new Delivery("D-1011", "M-0256", "Rajesh Gopaul",   "BNS",  75.5, 49, 4));  // boundary: REJECT
+        season.add(new Delivery("D-1012", "M-0203", "Kavi Soobrayen",  "MZE", 500.0, 84, 5));  // boundary: B
+
+        return season;
+    }
+
+//  Prints the full five-step breakdown for one delivery
+    private static void printDeliveryBreakdown(Delivery delivery) {
+
+        String grade              = gradeOF(delivery.getQualityScore());
+        double gradeMultiplier    = gradeMultiplierOf(grade);
+        double basePrice          = basePriceOf(delivery.getProduceCode());
+        double categoryMultiplier = categoryMultiplierOf(delivery.getProduceCode());
+        double massKg             = delivery.getMassKg();
+        boolean rejected          = grade.equals("REJECT");
+
+        double baseValue      = massKg * basePrice;
+        double gradedValue    = baseValue * gradeMultiplier;
+        double categoryValue  = gradedValue * categoryMultiplier;
+        double commissionRate = (double) commissionPercentage / 100;
+        double commission     = rejected ? 0.0 : categoryValue * commissionRate;
+        double levy           = rejected ? 0.0 : massKg * levyPerKg;
+
+        System.out.println();
+        System.out.println("Delivery " + delivery.getDeliveryId() + " recorded. "
+                + delivery.getMemberId() + " " + delivery.getMemberName()
+                + " - " + delivery.getProduceCode() + " " + kg(massKg) + " kg"
+                + " - score " + delivery.getQualityScore()
+                + " - week " + delivery.getWeek()
+                + " - grade " + grade);
+
+        System.out.printf("  1. %-16s %-38s %14s%n", "Base value",
+                kg(massKg) + " kg x " + money(basePrice) + " MUR/kg", money(baseValue));
+        System.out.printf("  2. %-16s %-38s %14s%n", "Grade " + grade,
+                "x " + rate(gradeMultiplier), money(gradedValue));
+        System.out.printf("  3. %-16s %-38s %14s%n", categoryNameOf(delivery.getProduceCode()),
+                "x " + rate(categoryMultiplier), money(categoryValue));
+        System.out.printf("  4. %-16s %-38s %14s%n", "Commission",
+                rejected ? "not charged on a REJECT"
+                        : commissionPercentage + "% of the value after step 3",
+                "- " + money(commission));
+        System.out.printf("  5. %-16s %-38s %14s%n", "Transport levy",
+                rejected ? "not charged on a REJECT"
+                        : kg(massKg) + " kg x " + money(levyPerKg) + " MUR/kg",
+                "- " + money(levy));
+        System.out.printf("     %-16s %-38s %14s MUR%n", "NET PAYABLE", "",
+                money(netPayable(delivery)));
+    }
 }

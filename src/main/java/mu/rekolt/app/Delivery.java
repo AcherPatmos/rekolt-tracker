@@ -1,6 +1,6 @@
 package mu.rekolt.app;
 
-public abstract class Delivery {
+public class Delivery {
     private final String deliveryId;
     private final String memberId;
     private final String memberName;
