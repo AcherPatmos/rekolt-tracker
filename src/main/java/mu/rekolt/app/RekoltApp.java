@@ -6,6 +6,51 @@ import java.util.List;
 
 public class RekoltApp {
 
+//   Menu options
+    private static void printMenu() {
+        System.out.println();
+        System.out.println("REKOLT PRODUCE TRACKER - season 2026");
+        System.out.println("1. Record a delivery          3. Generate the season report");
+        System.out.println("2. Season figures on screen   4. Exit");
+    }
+//  runs the whole program
+    public static void main(String[] args) {
+
+        Scanner in = new Scanner(System.in);
+        List<Delivery> season = seedSeason();
+
+        boolean running = true;
+        while (running) {
+            printMenu();
+
+            switch (readMenuOption(in)) {
+                case 1: {
+                    Delivery recorded = readDelivery(in);
+                    season.add(recorded);
+                    printDeliveryBreakdown(recorded);
+                    break;
+                }
+                case 2:
+//                    printSeasonFigures(season);
+                    break;
+                case 3:
+                    System.out.println();
+                    System.out.println("Not implemented yet. The season report arrives in objective 6.");
+                    break;
+                case 4:
+                    running = false;
+                    System.out.println();
+                    System.out.println("Goodbye.");
+                    break;
+                default:
+                    // Unreachable: readMenuOption only returns 1 to 4.
+                    break;
+            }
+        }
+
+        in.close();
+    }
+
 //  base price of Produce in MUR per kg
     private static final double mzePricePerKg = 30.0;   // MZE Maize          (cereal)
     private static final double bnsPricePerKg = 90.0;   // BNS Beans          (cereal)
