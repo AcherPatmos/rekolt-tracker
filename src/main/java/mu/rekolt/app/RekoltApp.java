@@ -31,7 +31,7 @@ public class RekoltApp {
                     break;
                 }
                 case 2:
-//                    printSeasonFigures(season);
+                    printSeasonFigures(season);
                     break;
                 case 3:
                     System.out.println();
@@ -356,4 +356,119 @@ public class RekoltApp {
         System.out.printf("     %-16s %-38s %14s MUR%n", "NET PAYABLE", "",
                 money(netPayable(delivery)));
     }
+//  prints how much individual members are making
+    private static void printMemberTotals(List<Delivery> season) {
+        System.out.println();
+        System.out.println("Total payment per member (MUR)");
+
+        double seasonTotal = 0.0;
+
+        for (int i = 0; i < season.size(); i++) {
+            Delivery current = season.get(i);
+
+            boolean alreadySeen = false;
+            for (int j = 0; j < i; j++) {
+                if (season.get(j).getMemberId().equals(current.getMemberId())) {
+                    alreadySeen = true;
+                    break;
+                }
+            }
+            if (alreadySeen) {
+                continue;
+            }
+
+            double memberTotal = 0.0;
+            for (Delivery delivery : season) {
+                if (delivery.getMemberId().equals(current.getMemberId())) {
+                    // The Delivery overload of netPayable. A REJECT returns
+                    // 0.0, so rejected loads add nothing without needing a
+                    // special case here.
+                    memberTotal += netPayable(delivery);
+                }
+            }
+
+            seasonTotal += memberTotal;
+            System.out.printf("  %-8s %-20s %14s%n",
+                    current.getMemberId(), current.getMemberName(), money(memberTotal));
+        }
+
+        System.out.printf("  %-8s %-20s %14s%n", "", "SEASON TOTAL", money(seasonTotal));
+    }
+
+//  builds grid for holding the weekly produce using nested for loops
+    private static double[][] buildWeeklyGrid(List<Delivery> season) {
+        double[][] grid = new double[weeksInSeason][produceCodes.length];
+
+        for (int week = 1; week <= weeksInSeason; week++) {
+            for (int column = 0; column < produceCodes.length; column++) {
+
+                double total = 0.0;
+//               nested for loop;
+                for (Delivery delivery : season) {
+                    if (delivery.getWeek() == week
+                            && delivery.getProduceCode().equals(produceCodes[column])) {
+                        total += delivery.getMassKg();
+                    }
+                }
+
+//                 Weeks are numbered from 1 but arrays are indexed from 0,
+//                 so week 1 is stored in row 0. This is the only place the
+//                 offset appears; the printer converts back with row + 1.
+                grid[week - 1][column] = total;
+            }
+        }
+
+        return grid;
+    }
+//  Prints the grid format built by build weekly grid
+    private static void printWeeklyGrid(double[][] grid) {
+        System.out.println();
+        System.out.println("Weekly volume grid (kg)");
+
+        System.out.printf("  %-6s", "Week");
+        for (String code : produceCodes) {
+            System.out.printf("%10s", code);
+        }
+        System.out.printf("%10s%n", "Total");
+
+        double seasonMass = 0.0;
+
+        for (int row = 0; row < grid.length; row++) {
+
+            double rowTotal = 0.0;
+            for (int column = 0; column < grid[row].length; column++) {
+                rowTotal += grid[row][column];
+            }
+
+            if (rowTotal == 0.0) {
+                continue;
+            }
+
+            System.out.printf("  %-6d", row + 1);
+            for (int column = 0; column < grid[row].length; column++) {
+                System.out.printf("%10s", kg(grid[row][column]));
+            }
+            System.out.printf("%10s%n", kg(rowTotal));
+
+            seasonMass += rowTotal;
+        }
+
+        System.out.printf("  %-6s", "All");
+        for (int column = 0; column < produceCodes.length; column++) {
+            double columnTotal = 0.0;
+            for (double[] doubles : grid) {
+                columnTotal += doubles[column];
+            }
+            System.out.printf("%10s", kg(columnTotal));
+        }
+        System.out.printf("%10s%n", kg(seasonMass));
+    }
+//  Method that prints season figures by calling on the build grid method and print member totals
+    private static void printSeasonFigures(List<Delivery> season) {
+        System.out.println();
+        System.out.println("SEASON FIGURES:  " + season.size() + " deliveries recorded");
+        printMemberTotals(season);
+        printWeeklyGrid(buildWeeklyGrid(season));
+    }
+
 }
