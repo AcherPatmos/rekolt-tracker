@@ -51,16 +51,17 @@ public class RekoltApp {
         in.close();
     }
 
-//  base price of Produce in MUR per kg
-    private static final double mzePricePerKg = 30.0;   // MZE Maize          (cereal)
-    private static final double bnsPricePerKg = 90.0;   // BNS Beans          (cereal)
-    private static final double potPricePerKg = 45.0;   // POT Potatoes       (perishable)
-    private static final double teaPricePerKg = 25.0;   // TEA Green tea-leaf (cash crop)
+//    array holding produce code
+    private static final String [] produceCode={ "MZE", "BNS", "POT", "TEA" };
 
-//  category multiplier
-    private static final double cerealMultiplier     = 1.00;
-    private static final double perishableMultiplier = 0.90;
-    private static final double cashCropMultiplier   = 1.10;
+//   array holding base price of Produce in MUR per kg
+    private static final double [] basePricePerKgs={30.0,90.0,45.0,25.0};
+
+//  array holding category multiplier
+    private static final double [] categoryMultiplier={1.00, 1.00, 0.90, 1.10};
+
+//   array holding category names
+    private static final String [] categoryNames={"Cereal", "Cereal", "Perishable", "Cash Crop"};
 
 //  percentage amount collected by the commission
     private static final int commissionPercentage = 5;
