@@ -1,8 +1,6 @@
 package mu.rekolt.app;
 
-import java.util.ArrayList;
-import java.util.Scanner;
-import java.util.List;
+import java.util.*;
 
 public class RekoltApp {
 
@@ -49,6 +47,24 @@ public class RekoltApp {
         }
 
         in.close();
+    }
+
+//  Menu option: a whole number from 1 to 4
+    private static int readMenuOption(Scanner in) {
+        while (true) {
+            System.out.print("Choose an option: ");
+            String raw = in.nextLine().trim();
+            try {
+                int option = Integer.parseInt(raw);
+                if (option >= 1 && option <= 4) {
+                    return option;
+                }
+                System.out.println("Please choose 1, 2, 3 or 4. Please try again.");
+            } catch (NumberFormatException e) {
+                // Catches both empty input and text, since neither parses.
+                System.out.println("The option must be a whole number from 1 to 4. Please try again.");
+            }
+        }
     }
 
 //    array holding produce code
@@ -152,7 +168,6 @@ public class RekoltApp {
         return categoryValue - commission - levy;
     }
 //  Method overload
-
     private static double netPayable(Delivery delivery){
         String grade = gradeOF(delivery.getQualityScore());
         return netPayable(delivery.getMassKg(), basePriceOf(delivery.getProduceCode()),
@@ -174,23 +189,55 @@ public class RekoltApp {
         return String.format("%.2f", multiplier);
     }
 
-//  Menu option: a whole number from 1 to 4
-    private static int readMenuOption(Scanner in) {
-        while (true) {
-            System.out.print("Choose an option: ");
-            String raw = in.nextLine().trim();
-            try {
-                int option = Integer.parseInt(raw);
-                if (option >= 1 && option <= 4) {
-                    return option;
-                }
-                System.out.println("Please choose 1, 2, 3 or 4. Please try again.");
-            } catch (NumberFormatException e) {
-                // Catches both empty input and text, since neither parses.
-                System.out.println("The option must be a whole number from 1 to 4. Please try again.");
-            }
+//  hash map that connects each farmer to the amount they earned from their produce
+    private static HashMap<String, Double> buildMemberTotals(List<Delivery> season) {
+        HashMap<String, Double> totals = new HashMap<>();
+
+        for (Delivery delivery : season) {
+            String memberId = delivery.getMemberId();
+            double runningTotal = totals.getOrDefault(memberId, 0.0);
+            totals.put(memberId, runningTotal + netPayable(delivery));
         }
+
+        return totals;
     }
+//  maps the members to their individual deliveries. if it is the first time, it creates a new arraylist for them
+    private static HashMap<String, List<Delivery>> buildDeliveriesByMember(List<Delivery> season) {
+        HashMap<String, List<Delivery>> byMember = new HashMap<>();
+
+        for (Delivery delivery : season) {
+            String memberId = delivery.getMemberId();
+
+            List<Delivery> theirDeliveries = byMember.computeIfAbsent(memberId, k -> new ArrayList<>());
+            theirDeliveries.add(delivery);
+        }
+
+        return byMember;
+    }
+//  The distinct member identifiers seen this season through a hashset
+    private static HashSet<String> collectMemberIds(List<Delivery> season) {
+        HashSet<String> memberIds = new HashSet<>();
+
+        for (Delivery delivery : season) {
+            memberIds.add(delivery.getMemberId());
+        }
+
+        return memberIds;
+    }
+//  checks if a produce delivered was rejected
+    private static boolean isRejected(Delivery delivery){
+        return gradeOF(delivery.getQualityScore()).equals("Reject");
+    }
+//  stores a list of produce deliveries that were not rejected
+    private static List<Delivery> withoutRejects(List<Delivery> season) {
+        // new ArrayList<>(season) copies the list. Both lists then point at
+        // the same Delivery objects, which is harmless here because Delivery
+        // has final fields and cannot be altered by anyone.
+        List<Delivery> payable = new ArrayList<>(season);
+        payable.removeIf(delivery -> isRejected(delivery));
+        return payable;
+    }
+
 //  Pattern identifier: the letter M, a hyphen, then exactly four digits
     private static String readMemberId(Scanner in) {
         while (true) {
