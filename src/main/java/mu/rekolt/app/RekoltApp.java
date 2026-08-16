@@ -238,6 +238,48 @@ public class RekoltApp {
         return payable;
     }
 
+    private static class deliveryByDescendingValue implements Comparator<Delivery> {
+        @Override
+        public int compare(Delivery a, Delivery b) {
+            int byValue = Double.compare(netPayable(b), netPayable(a));
+            if (byValue != 0) {
+                return byValue;
+            }
+            // Equal value: fall back to the identifier so two identical loads
+            // always print in the same order.
+            return a.getDeliveryId().compareTo(b.getDeliveryId());
+        }
+    }
+
+    private static class MemberByTotalDescending implements Comparator<String> {
+
+        private final Map<String, Double> totals;
+
+        MemberByTotalDescending(Map<String, Double> totals) {
+            this.totals = totals;
+        }
+
+        @Override
+        public int compare(String memberIdA, String memberIdB) {
+            double totalA = totals.getOrDefault(memberIdA, 0.0);
+            double totalB = totals.getOrDefault(memberIdB, 0.0);
+
+            int byTotal = Double.compare(totalB, totalA);   // b first: descending
+            if (byTotal != 0) {
+                return byTotal;
+            }
+            return memberIdA.compareTo(memberIdB);
+        }
+    }
+
+    private static String nameOf(String memberId, Map<String, List<Delivery>> byMember) {
+        List<Delivery> theirDeliveries = byMember.get(memberId);
+        if (theirDeliveries == null || theirDeliveries.isEmpty()) {
+            return "(name not recorded)";
+        }
+        return theirDeliveries.get(theirDeliveries.size() - 1).getMemberName();
+    }
+
 //  Pattern identifier: the letter M, a hyphen, then exactly four digits
     private static String readMemberId(Scanner in) {
         while (true) {
