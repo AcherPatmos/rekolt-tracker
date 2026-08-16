@@ -52,7 +52,7 @@ public class RekoltApp {
     }
 
 //    array holding produce code
-    private static final String [] produceCode={ "MZE", "BNS", "POT", "TEA" };
+    private static final String [] produceCodes={ "MZE", "BNS", "POT", "TEA" };
 
 //   array holding base price of Produce in MUR per kg
     private static final double [] basePricePerKgs={30.0,90.0,45.0,25.0};
@@ -70,13 +70,15 @@ public class RekoltApp {
     private static final double levyPerKg = 2.0;
 
     private static final int      weeksInSeason = 20;
-    private static final String[] produceCodes  = { "MZE", "BNS", "POT", "TEA" };
 
 //     Validation bounds, named so the numbers are not scattered through the file.
     private static final double minMassKg = 0.0;
     private static final double maxMassKg = 5000.0;
     private static final int    minScore  = 0;
     private static final int    maxScore  = 100;
+
+//  How many rows the "top deliveries" table shows
+    private static final int topDeliveryCount = 5;
 
 //     The seeded deliveries occupy D-1001 to D-1012, so anything the user
 //     records during this run starts at D-1013.
@@ -106,35 +108,32 @@ public class RekoltApp {
         return gradeMultiplier;
     }
 
-//  Base price in MUR per kg for a produce code
-    private static double basePriceOf(String produceCode) {
-        return switch (produceCode) {
-            case "MZE" -> mzePricePerKg;
-            case "BNS" -> bnsPricePerKg;
-            case "POT" -> potPricePerKg;
-            case "TEA" -> teaPricePerKg;
-            default -> 0.0;
-        };
+//  Helper function to help match the produce code index to the right base price and category
+    private static int indexOfProduceCode(String produceCode){
+        for (int i = 0; i < produceCode.length(); i++) {
+            if(produceCodes[i].equals(produceCode)){
+                return i;
+            }
+        }
+        return -1;
     }
-//  Category multiplier for a produce code.
-    private static double categoryMultiplierOf(String produceCode) {
-        return switch (produceCode) {
-            // MZE and BNS are in the same category
-            case "MZE", "BNS" -> cerealMultiplier;
-            case "POT" -> perishableMultiplier;
-            case "TEA" -> cashCropMultiplier;
-            default -> 0.0;
-        };
+
+//  Base price in MUR per kg for a produce code
+    private static double basePriceOf(String produceCode){
+        int index = indexOfProduceCode(produceCode);
+        return (index<0) ? 0.0: basePricePerKgs[index];
+    }
+
+//  category multiplier based on produce type
+    private static double categoryMultiplierOf(String produceCode){
+        int index = indexOfProduceCode(produceCode);
+        return (index<0) ? 0.0: categoryMultiplier[index];
     }
 
 //  produce category identifier
-    private static String categoryNameOf (String produceCode){
-        return switch (produceCode){
-            case "MZE", "BNS" -> "Cereal";
-            case "POT" -> "Perishable";
-            case "TEA" -> "Cash crop";
-            default -> "Unknown";
-        };
+    private static String categoryNameOf(String produceCode){
+        int index=indexOfProduceCode(produceCode);
+        return (index<0) ? "unknown": categoryNames[index];
     }
 
     private static double netPayable(double massKg, double basePrice,
