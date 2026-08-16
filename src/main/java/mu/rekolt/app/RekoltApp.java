@@ -237,8 +237,8 @@ public class RekoltApp {
         payable.removeIf(delivery -> isRejected(delivery));
         return payable;
     }
-
-    private static class deliveryByDescendingValue implements Comparator<Delivery> {
+//  Orders deliveries by net payable, largest first, so a report can print the biggest loads at the top.
+    private static class DeliveryByDescendingValue implements Comparator<Delivery> {
         @Override
         public int compare(Delivery a, Delivery b) {
             int byValue = Double.compare(netPayable(b), netPayable(a));
@@ -250,7 +250,8 @@ public class RekoltApp {
             return a.getDeliveryId().compareTo(b.getDeliveryId());
         }
     }
-
+//  Orders member identifiers by their season total, largest first, ties broken
+//  by identifier so the ordering is reproducible.
     private static class MemberByTotalDescending implements Comparator<String> {
 
         private final Map<String, Double> totals;
@@ -271,13 +272,26 @@ public class RekoltApp {
             return memberIdA.compareTo(memberIdB);
         }
     }
-
+//  Resolves a member identifier to the name to display for them.
     private static String nameOf(String memberId, Map<String, List<Delivery>> byMember) {
         List<Delivery> theirDeliveries = byMember.get(memberId);
         if (theirDeliveries == null || theirDeliveries.isEmpty()) {
             return "(name not recorded)";
         }
-        return theirDeliveries.get(theirDeliveries.size() - 1).getMemberName();
+        return theirDeliveries.getLast().getMemberName();
+    }
+//  Prints the report for a single member: their details if they have delivered
+//  this season, or a short "not found" note if not.
+    private static void printMemberSearch(String memberId,
+                                          Map<String, Double> totals,
+                                          Map<String, List<Delivery>> byMember,
+                                          Set<String> memberIds) {
+        System.out.println();
+
+        if (!memberIds.contains(memberId)) {
+            System.out.println("  No deliveries recorded for " + memberId + " this season.");
+            System.out.println("  " + memberIds.size() + " members have delivered so far.");
+        }
     }
 
 //  Pattern identifier: the letter M, a hyphen, then exactly four digits
