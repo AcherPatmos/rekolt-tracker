@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -242,7 +243,14 @@ public class RekoltApp {
         // the same Delivery objects, which is harmless here because Delivery
         // has final fields and cannot be altered by anyone.
         List<Delivery> payable = new ArrayList<>(season);
-        payable.removeIf(delivery -> isRejected(delivery));
+
+        Iterator<Delivery> iterator = payable.iterator();
+        while (iterator.hasNext()) {
+            Delivery delivery = iterator.next();   // next() must be called before remove()
+            if (isRejected(delivery)) {
+                iterator.remove();
+            }
+        }
         return payable;
     }
 //  Orders deliveries by net payable, largest first, so a report can print the biggest loads at the top.
