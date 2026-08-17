@@ -1,6 +1,15 @@
 package mu.rekolt.app;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.Set;
 
 public class RekoltApp {
 
@@ -15,7 +24,7 @@ public class RekoltApp {
     public static void main(String[] args) {
 
         Scanner in = new Scanner(System.in);
-        List<Delivery> season = seedSeason();
+        ArrayList<Delivery> season = seedSeason();
 
         boolean running = true;
         while (running) {
@@ -282,17 +291,45 @@ public class RekoltApp {
     }
 //  Prints the report for a single member: their details if they have delivered
 //  this season, or a short "not found" note if not.
-    private static void printMemberSearch(String memberId,
-                                          Map<String, Double> totals,
-                                          Map<String, List<Delivery>> byMember,
-                                          Set<String> memberIds) {
-        System.out.println();
+private static void printMemberSearch(String memberId,
+                                      Map<String, Double> totals,
+                                      Map<String, List<Delivery>> byMember,
+                                      Set<String> memberIds) {
+    System.out.println();
 
-        if (!memberIds.contains(memberId)) {
-            System.out.println("  No deliveries recorded for " + memberId + " this season.");
-            System.out.println("  " + memberIds.size() + " members have delivered so far.");
-        }
+    if (!memberIds.contains(memberId)) {
+        System.out.println("  No deliveries recorded for " + memberId + " this season.");
+        System.out.println("  " + memberIds.size() + " members have delivered so far.");
+        return;
     }
+
+    // A copy, because sorting rearranges the list it is given and the map
+    // should keep its deliveries in the order they were recorded.
+    List<Delivery> theirDeliveries =
+            new ArrayList<>(byMember.getOrDefault(memberId, new ArrayList<>()));
+
+    // Collections.sort with no comparator uses the NATURAL order, which is
+    // the compareTo written inside Delivery: by identifier, so by date.
+    Collections.sort(theirDeliveries);
+
+    System.out.println("  " + memberId + "  " + nameOf(memberId, byMember)
+            + "  -  " + theirDeliveries.size() + " deliveries");
+    System.out.printf("    %-8s %-6s %-5s %10s %-7s %14s%n",
+            "Slip", "Week", "Code", "Mass kg", "Grade", "Net MUR");
+
+    for (Delivery delivery : theirDeliveries) {
+        System.out.printf("    %-8s %-6d %-5s %10s %-7s %14s%n",
+                delivery.getDeliveryId(),
+                delivery.getWeek(),
+                delivery.getProduceCode(),
+                kg(delivery.getMassKg()),
+                gradeOF(delivery.getQualityScore()),
+                money(netPayable(delivery)));
+    }
+
+    System.out.printf("    %-8s %-6s %-5s %10s %-7s %14s%n",
+            "", "", "", "", "TOTAL", money(totals.getOrDefault(memberId, 0.0)));
+}
 
 //  Pattern identifier: the letter M, a hyphen, then exactly four digits
     private static String readMemberId(Scanner in) {
@@ -305,6 +342,21 @@ public class RekoltApp {
             System.out.println("The identifier must be M, a hyphen and four digits, for example M-0042. Please try again.");
         }
     }
+
+    private static String readMemberIdOrBlank(Scanner in) {
+        while (true) {
+            System.out.print("Look up a member (M-0042, or press Enter to skip) : ");
+            String raw = in.nextLine().trim().toUpperCase();
+            if (raw.isEmpty()) {
+                return "";
+            }
+            if (raw.matches("M-\\d{4}")) {
+                return raw;
+            }
+            System.out.println("Type an identifier such as M-0042, or press Enter to skip. Please try again.");
+        }
+    }
+
 //  Member name: any non-empty text
     private static String readName(Scanner in) {
         while (true) {
@@ -381,6 +433,7 @@ public class RekoltApp {
             }
         }
     }
+
 //  Runs the six prompts in order and assembles the result into a Delivery
     private static Delivery readDelivery(Scanner in) {
         String memberId    = readMemberId(in);
@@ -396,9 +449,9 @@ public class RekoltApp {
         return new Delivery(deliveryId, memberId, memberName,
                 produceCode, massKg, qualityScore, week);
     }
-//  list holding the full season's produce. had to be an Arraylist so that it can dynamically grow.
-    private static List<Delivery> seedSeason() {
-        List<Delivery> season = new ArrayList<>();
+//  array list holding the full season's produce. had to be an Arraylist so that it can dynamically grow.
+    private static ArrayList<Delivery> seedSeason() {
+        ArrayList<Delivery> season = new ArrayList<>();
 
         //                            id             member                name                          code              mass           score         week
         season.add(new Delivery("D-1001", "M-0042", "Devi Ramjaun",    "BNS", 236.0, 91, 1));
@@ -459,7 +512,8 @@ public class RekoltApp {
         System.out.printf("     %-16s %-38s %14s MUR%n", "NET PAYABLE", "",
                 money(netPayable(delivery)));
     }
-//  prints how much individual members are making
+//  prints how much individual members are making using hashmaps and hashset
+
     private static void printMemberTotals(List<Delivery> season) {
         System.out.println();
         System.out.println("Total payment per member (MUR)");
