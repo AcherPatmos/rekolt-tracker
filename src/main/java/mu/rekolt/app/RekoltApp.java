@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -38,7 +37,7 @@ public class RekoltApp {
                     break;
                 }
                 case 2:
-                    printSeasonFigures(season);
+                    printSeasonFigures(in,season);
                     break;
                 case 3:
                     System.out.println();
@@ -345,7 +344,7 @@ private static void printMemberSearch(String memberId,
 
     private static String readMemberIdOrBlank(Scanner in) {
         while (true) {
-            System.out.print("Look up a member (M-0042, or press Enter to skip) : ");
+            System.out.print("Look up a member (ex: M-0042, or press Enter to skip) : ");
             String raw = in.nextLine().trim().toUpperCase();
             if (raw.isEmpty()) {
                 return "";
@@ -513,70 +512,51 @@ private static void printMemberSearch(String memberId,
                 money(netPayable(delivery)));
     }
 //  prints how much individual members are making using hashmaps and hashset
-
-    private static void printMemberTotals(List<Delivery> season) {
+    private static void printMemberTotals(Map<String, Double> totals,
+                                          Map<String, List<Delivery>> byMember,
+                                          Set<String> memberIds) {
         System.out.println();
         System.out.println("Total payment per member (MUR)");
 
+//  a new array to sort the data from our hashset is created
+        List<String> ordered = new ArrayList<>(memberIds);
+        ordered.sort(new MemberByTotalDescending(totals));
+
         double seasonTotal = 0.0;
 
-        for (int i = 0; i < season.size(); i++) {
-            Delivery current = season.get(i);
-
-            boolean alreadySeen = false;
-            for (int j = 0; j < i; j++) {
-                if (season.get(j).getMemberId().equals(current.getMemberId())) {
-                    alreadySeen = true;
-                    break;
-                }
-            }
-            if (alreadySeen) {
-                continue;
-            }
-
-            double memberTotal = 0.0;
-            for (Delivery delivery : season) {
-                if (delivery.getMemberId().equals(current.getMemberId())) {
-                    // The Delivery overload of netPayable. A REJECT returns
-                    // 0.0, so rejected loads add nothing without needing a
-                    // special case here.
-                    memberTotal += netPayable(delivery);
-                }
-            }
+        for (String memberId : ordered) {
+            double memberTotal = totals.getOrDefault(memberId, 0.0);
+            int    slipCount   = byMember.getOrDefault(memberId, new ArrayList<>()).size();
 
             seasonTotal += memberTotal;
-            System.out.printf("  %-8s %-20s %14s%n",
-                    current.getMemberId(), current.getMemberName(), money(memberTotal));
+
+            System.out.printf("  %-8s %-20s %10s %14s%n",
+                    memberId, nameOf(memberId, byMember),
+                    slipCount + (slipCount == 1 ? " slip" : " slips"),
+                    money(memberTotal));
         }
 
-        System.out.printf("  %-8s %-20s %14s%n", "", "SEASON TOTAL", money(seasonTotal));
+        System.out.printf("  %-8s %-20s %10s %14s%n",
+                "", "SEASON TOTAL", "", money(seasonTotal));
+        System.out.println("  " + memberIds.size()
+                + " distinct members were recorded, so the season report needs "
+                + memberIds.size() + " member sections.");
     }
 
-//  builds grid for holding the weekly produce using nested for loops
+//  builds grid for holding the weekly produce delivered
     private static double[][] buildWeeklyGrid(List<Delivery> season) {
         double[][] grid = new double[weeksInSeason][produceCodes.length];
 
-        for (int week = 1; week <= weeksInSeason; week++) {
-            for (int column = 0; column < produceCodes.length; column++) {
-
-                double total = 0.0;
-//               nested for loop;
-                for (Delivery delivery : season) {
-                    if (delivery.getWeek() == week
-                            && delivery.getProduceCode().equals(produceCodes[column])) {
-                        total += delivery.getMassKg();
-                    }
-                }
-
-//                 Weeks are numbered from 1 but arrays are indexed from 0,
-//                 so week 1 is stored in row 0. This is the only place the
-//                 offset appears; the printer converts back with row + 1.
-                grid[week - 1][column] = total;
+        for(Delivery delivery: season){
+            int row= delivery.getWeek()-1;
+            int column= indexOfProduceCode(delivery.getProduceCode());
+            if (row >= 0 && row < weeksInSeason && column >= 0) {
+                grid[row][column] += delivery.getMassKg();
             }
         }
-
         return grid;
     }
+
 //  Prints the grid format built by build weekly grid
     private static void printWeeklyGrid(double[][] grid) {
         System.out.println();
@@ -620,12 +600,56 @@ private static void printMemberSearch(String memberId,
         }
         System.out.printf("%10s%n", kg(seasonMass));
     }
-//  Method that prints season figures by calling on the build grid method and print member totals
-    private static void printSeasonFigures(List<Delivery> season) {
-        System.out.println();
-        System.out.println("SEASON FIGURES:  " + season.size() + " deliveries recorded");
-        printMemberTotals(season);
-        printWeeklyGrid(buildWeeklyGrid(season));
+
+private static void printTopDeliveries(List<Delivery> season){
+    System.out.println();
+    System.out.println("Top " + topDeliveryCount + " deliveries by value");
+
+    List<Delivery> payable = withoutRejects(season);
+    int removed = season.size() - payable.size();
+    payable.sort(new DeliveryByDescendingValue());
+
+    if (payable.isEmpty()) {
+        System.out.println("  Nothing payable this season.");
+        return;
     }
+
+    int rows = Math.min(topDeliveryCount, payable.size());
+    for (int i = 0; i < rows; i++) {
+        Delivery delivery = payable.get(i);
+        System.out.printf("  %d. %-8s %-8s %-5s %10s kg  %-7s %14s%n",
+                i + 1,
+                delivery.getDeliveryId(),
+                delivery.getMemberId(),
+                delivery.getProduceCode(),
+                kg(delivery.getMassKg()),
+                gradeOF(delivery.getQualityScore()),
+                money(netPayable(delivery)));
+    }
+
+    System.out.println("  " + removed + " rejected deliveries were removed from this table, "
+            + "however they remain in the season report and in the volume grid.");
+
+}
+
+//  Method that prints season figures by calling on the build grid method and print member totals
+private static void printSeasonFigures(Scanner in, List<Delivery> season) {
+    System.out.println();
+    System.out.println("SEASON FIGURES - " + season.size() + " deliveries recorded");
+
+    Map<String, Double>         totals    = buildMemberTotals(season);
+    Map<String, List<Delivery>> byMember  = buildDeliveriesByMember(season);
+    Set<String>                 memberIds = collectMemberIds(season);
+
+    printMemberTotals(totals, byMember, memberIds);
+    printWeeklyGrid(buildWeeklyGrid(season));
+    printTopDeliveries(season);
+
+    System.out.println();
+    String wanted = readMemberIdOrBlank(in);
+    if (!wanted.isEmpty()) {
+        printMemberSearch(wanted, totals, byMember, memberIds);
+    }
+}
 
 }
