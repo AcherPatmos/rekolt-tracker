@@ -76,16 +76,16 @@ public class RekoltApp {
         }
     }
 
-//    array holding produce code
+//   list holding produce code
     private static final String [] produceCodes={ "MZE", "BNS", "POT", "TEA" };
 
-//   array holding base price of Produce in MUR per kg
+//   list holding base price of Produce in MUR per kg
     private static final double [] basePricePerKgs={30.0,90.0,45.0,25.0};
 
-//  array holding category multiplier
+//  list holding category multiplier
     private static final double [] categoryMultiplier={1.00, 1.00, 0.90, 1.10};
 
-//   array holding category names
+//  list holding category names
     private static final String [] categoryNames={"Cereal", "Cereal", "Perishable", "Cash Crop"};
 
 //  percentage amount collected by the commission
@@ -223,7 +223,7 @@ public class RekoltApp {
 
         return byMember;
     }
-//  The distinct member identifiers seen this season through a hashset
+//  The distinct member identifiers(ids) seen this season stored in a hashset
     private static HashSet<String> collectMemberIds(List<Delivery> season) {
         HashSet<String> memberIds = new HashSet<>();
 
@@ -239,9 +239,9 @@ public class RekoltApp {
     }
 //  stores a list of produce deliveries that were not rejected
     private static List<Delivery> withoutRejects(List<Delivery> season) {
-        // new ArrayList<>(season) copies the list. Both lists then point at
-        // the same Delivery objects, which is harmless here because Delivery
-        // has final fields and cannot be altered by anyone.
+//         new ArrayList<>(season) copies the list. Both lists then point at
+//         the same Delivery objects, which is harmless here because Delivery
+//         has final fields and cannot be altered by anyone.
         List<Delivery> payable = new ArrayList<>(season);
 
         Iterator<Delivery> iterator = payable.iterator();
