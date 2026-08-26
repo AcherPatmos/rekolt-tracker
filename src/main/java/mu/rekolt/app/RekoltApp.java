@@ -1,4 +1,5 @@
 package mu.rekolt.app;
+import mu.rekolt.model.Delivery;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+
+import static mu.rekolt.util.Format.*;
 
 public class RekoltApp {
 
@@ -181,21 +184,6 @@ public class RekoltApp {
         String grade = gradeOF(delivery.getQualityScore());
         return netPayable(delivery.getMassKg(), basePriceOf(delivery.getProduceCode()),
                 gradeMultiplierOf(grade), categoryMultiplierOf(delivery.getProduceCode()));
-    }
-
-//  Money for display: thousands separated, two decimals
-    private static String money(double amount) {
-        return String.format("%,.2f", amount);
-    }
-
-//  A mass for display: one decimal
-    private static String kg(double massKg) {
-        return String.format("%.1f", massKg);
-    }
-
-//  A multiplier for display: two decimals
-    private static String rate(double multiplier) {
-        return String.format("%.2f", multiplier);
     }
 
 //  hash map that connects each farmer to the amount they earned from their produce
