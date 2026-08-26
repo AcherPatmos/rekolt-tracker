@@ -1,5 +1,7 @@
 package mu.rekolt.app;
 import mu.rekolt.model.Delivery;
+import static mu.rekolt.util.Format.*;
+import static mu.rekolt.util.Validation.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,7 +14,6 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 
-import static mu.rekolt.util.Format.*;
 
 public class RekoltApp {
 
@@ -98,12 +99,6 @@ public class RekoltApp {
     private static final double levyPerKg = 2.0;
 
     private static final int      weeksInSeason = 20;
-
-//     Validation bounds, named so the numbers are not scattered through the file.
-    private static final double minMassKg = 0.0;
-    private static final double maxMassKg = 5000.0;
-    private static final int    minScore  = 0;
-    private static final int    maxScore  = 100;
 
 //  How many rows the "top deliveries" table shows
     private static final int topDeliveryCount = 5;
@@ -326,12 +321,12 @@ private static void printMemberSearch(String memberId,
             "", "", "", "", "TOTAL", money(totals.getOrDefault(memberId, 0.0)));
 }
 
-//  Pattern identifier: the letter M, a hyphen, then exactly four digits
+    //  Pattern identifier: the letter M, a hyphen, then exactly four digits
     private static String readMemberId(Scanner in) {
         while (true) {
             System.out.print("Member identifier : ");
             String raw = in.nextLine().trim();
-            if (raw.matches("M-\\d{4}")) {
+            if(isValidMemberId(raw)){
                 return raw;
             }
             System.out.println("The identifier must be M, a hyphen and four digits, for example M-0042. Please try again.");
@@ -345,7 +340,7 @@ private static void printMemberSearch(String memberId,
             if (raw.isEmpty()) {
                 return "";
             }
-            if (raw.matches("M-\\d{4}")) {
+            if (isValidMemberId(raw)){
                 return raw;
             }
             System.out.println("Type an identifier such as M-0042, or press Enter to skip. Please try again.");
@@ -357,7 +352,7 @@ private static void printMemberSearch(String memberId,
         while (true) {
             System.out.print("Member name : ");
             String raw = in.nextLine().trim();
-            if (!raw.isEmpty()) {
+            if (isValidName(raw)) {
                 return raw;
             }
             System.out.println("The name cannot be empty or only spaces. Please try again.");
@@ -384,9 +379,8 @@ private static void printMemberSearch(String memberId,
             String raw = in.nextLine().trim();
             try {
                 double massKg = Double.parseDouble(raw);
-                // Strictly above the minimum, but the maximum is inclusive:
-                // 5000 is accepted, 5000.01 is not, and 0 is not.
-                if (massKg > minMassKg && massKg <= maxMassKg) {
+//              calls the isValidMass boolean method to check
+                if (isValidMass(massKg)) {
                     return massKg;
                 }
                 System.out.println("Mass must be above 0 and not more than 5000. Please try again.");
@@ -402,7 +396,8 @@ private static void printMemberSearch(String memberId,
             String raw = in.nextLine().trim();
             try {
                 int score = Integer.parseInt(raw);
-                if (score >= minScore && score <= maxScore) {
+//              Calls the isValidScore Boolean method
+                if (isValidScore(score)) {
                     return score;
                 }
                 System.out.println("The score must be from 0 to 100. Please try again.");
