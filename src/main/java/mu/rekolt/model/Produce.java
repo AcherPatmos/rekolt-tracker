@@ -2,10 +2,6 @@ package mu.rekolt.model;
 
 import java.util.Objects;
 
-//  Objective 4 deviation: design-v1 had a single concrete Produce class with a
-//  category field. It was changed here because a field would have meant a
-//  switch on that field, which is the thing objective 5 exists to remove.
-
 public abstract class Produce {
 
     private final String code;            // MZE, BNS, POT, TEA; always in upper case
