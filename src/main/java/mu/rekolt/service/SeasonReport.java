@@ -100,8 +100,8 @@ public final class SeasonReport {
         System.out.printf("  %-6s", "All");
         for (int column = 0; column < codes.length; column++) {
             double columnTotal = 0.0;
-            for (int row = 0; row < grid.length; row++) {
-                columnTotal += grid[row][column];
+            for (double[] doubles : grid) {
+                columnTotal += doubles[column];
             }
             System.out.printf("%10s", Format.kg(columnTotal));
         }
@@ -124,9 +124,10 @@ public final class SeasonReport {
         }
     }
 
+//  Polymorphism Loop
     public static void printPriceList() {
         System.out.println();
-        System.out.println("Price list (a 100 kg grade B load of each)");
+        System.out.println("Price list (a 100 kg grade B delivery. No commission or Levy fee applied)");
         System.out.printf("  %-5s %-16s %-12s %10s %14s%n",
                 "Code", "Produce", "Category", "MUR/kg", "100 kg, B");
 
