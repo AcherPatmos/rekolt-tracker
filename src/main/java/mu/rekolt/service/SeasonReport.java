@@ -1,5 +1,11 @@
 package mu.rekolt.service;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.AccessDeniedException;
+import java.nio.file.FileSystemException;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
 import java.util.List;
 
 import mu.rekolt.model.Delivery;
@@ -8,6 +14,8 @@ import mu.rekolt.model.PaymentRules;
 import mu.rekolt.model.Produce;
 import mu.rekolt.util.Format;
 import mu.rekolt.util.Validation;
+import mu.rekolt.util.RoundMoney;
+import mu.rekolt.util.WriteRunLog;
 
 public final class SeasonReport {
 
@@ -164,12 +172,88 @@ public final class SeasonReport {
         );
     }
 
-    public static void printReport(Season season) {
+
+    //  Objective 6: the Word report
+    public static final Path ReportFile = Path.of("output", "season-report.docx");
+    public static final Path LogFile    = Path.of("output", "run-log.txt");
+
+    //  Menu option 3. Builds the figures, hands them to the Word writer, and turns
+//  any failure into a sentence the treasurer can act on.
+//  The catch blocks run most specific first. Every exception below is a
+//  subclass of IOException, so putting IOException at the top would make the
+//  rest unreachable and the compiler would reject the method.
+    public static boolean writeSeasonReport(Season season) {
+
+        if (season.deliveryCount() == 0) {
+            System.out.println();
+            System.out.println("There are no deliveries yet, so there is nothing to report.");
+            System.out.println("Record at least one delivery with option 1 first.");
+            return false;
+        }
+
+        DocxReportFigures figures = new DocxReportFigures(season);
+
         System.out.println();
-        System.out.println("The Word report arrives in objective 6. The season is ready for it: "
-                + season.memberCount() + " member sections, "
-                + season.deliveryCount() + " deliveries, "
-                + Format.money(season.seasonNetPayable()) + " MUR to pay out.");
-        System.out.println("Weeks " + Validation.MinWeek + " to " + Validation.MaxWeek + " are covered.");
+        System.out.print("Writing " + ReportFile + " ... ");
+
+        try {
+            WriteDocxReport.write(figures, ReportFile);
+
+        } catch (NoSuchFileException e) {
+            failed("The folder " + ReportFile.toAbsolutePath().getParent() + " does not exist and could not be created.",
+                    "Create it yourself, or run the program from the project root where output/ lives.");
+            return false;
+
+        } catch (AccessDeniedException e) {
+            failed("Permission was refused for " + ReportFile.toAbsolutePath() + ".",
+                    "The file is most likely open in Word. Close it and choose option 3 again.");
+            return false;
+
+        } catch (FileNotFoundException e) {
+            failed("The path " + ReportFile.toAbsolutePath() + " could not be opened for writing.",
+                    "Check that output/ is a folder and not a file, and that the name is not in use.");
+            return false;
+
+        } catch (FileSystemException e) {
+//          Covers a full disk, a read-only volume and a locked file on Windows
+            failed("The file system refused the write: " + e.getReason() + ".",
+                    "Check that output/ holds no folder named season-report.docx, and that the drive "
+                            + "is not read-only or full.");
+            return false;
+
+        } catch (IOException e) {
+            failed("The report could not be written: " + e.getMessage(),
+                    "Check the output/ folder and try again.");
+            return false;
+        }
+
+        System.out.println(figures.memberCount() + " member sections, done.");
+        System.out.println("  " + ReportFile.toAbsolutePath());
+        System.out.println("  Season net payable " + Format.money(figures.seasonNet()) + " MUR across "
+                + figures.deliveryCount() + " deliveries.");
+
+        if (figures.reconciles()) {
+            System.out.println("  Reconciled: the member sections add up to the closing total.");
+        } else {
+            System.out.println("  WARNING: sections and closing total differ by "
+                    + Format.money(figures.reconciliationGap()) + " MUR. Do not hand this out.");
+        }
+
+        WriteRunLog.append(LogFile, "season-report.docx written - "
+                + figures.memberCount() + " members, "
+                + figures.deliveryCount() + " deliveries, "
+                + Format.money(figures.seasonNet()) + " MUR, "
+                + (figures.reconciles() ? "reconciled" : "NOT RECONCILED"));
+
+        return true;
     }
+
+    //  One shape for every failure: what went wrong, then what to do about it
+    private static void failed(String whatHappened, String whatToDo) {
+        System.out.println("failed.");
+        System.out.println("  " + whatHappened);
+        System.out.println("  " + whatToDo);
+        WriteRunLog.append(LogFile, "FAILED - " + whatHappened);
+    }
+
 }
