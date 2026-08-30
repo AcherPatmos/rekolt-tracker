@@ -100,6 +100,23 @@ public class Member implements Payable, Reportable, Comparable<Member> {
         return lines;
     }
 
+    public double totalCommission() {
+        double total = 0.0;
+        for (Delivery delivery : deliveries) {
+            total += PaymentRules.commission(delivery.getProduce(), delivery.getGrade(), delivery.getMassKg());
+        }
+        return total;
+    }
+
+//  The transport levy this member paid across the season
+    public double totalLevy() {
+        double total = 0.0;
+        for (Delivery delivery : deliveries) {
+            total += PaymentRules.levy(delivery.getGrade(), delivery.getMassKg());
+        }
+        return total;
+    }
+
 //  Natural order: by identifier, so member sections in the report are stable
     @Override
     public int compareTo(Member other) {

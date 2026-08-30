@@ -24,6 +24,10 @@ public class Season {
 //  The seeded slips occupy D-1001 to D-1012, so a recorded one starts at D-1013
     private int nextDeliveryNumber = 1013;
 
+//  No-arg: a season starts empty and is filled by record()
+    public Season() {
+    }
+
     public Delivery record(String memberId, String memberName, Produce produce,
                            double massKg, int qualityScore, int week) {
 

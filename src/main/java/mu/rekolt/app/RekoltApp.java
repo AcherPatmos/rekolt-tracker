@@ -43,7 +43,7 @@ public class RekoltApp {
                     SeasonReport.printSeasonFigures(season);
                     break;
                 case 3:
-                    SeasonReport.printReport(season);
+                    SeasonReport.writeSeasonReport(season);
                     break;
                 case 4: {
                     String memberId = Main.readMemberIdOrBlank(in);
